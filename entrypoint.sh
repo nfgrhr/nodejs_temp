@@ -3,16 +3,11 @@
 # 设置各变量，WS 路径前缀。(注意:伪装路径不需要 / 符号开始,为避免不必要的麻烦,请不要使用特殊符号.)
 WSPATH=${WSPATH:-'argo'}
 UUID=${UUID:-'c32d7ea5-9f5b-4efc-98dd-8c5ccdb47de0'}
-WEB_USERNAME=${WEB_USERNAME:-'admin'}
-WEB_PASSWORD=${WEB_PASSWORD:-'password'}
 
 # Argo 固定域名隧道的两个参数,这个可以填 Json 内容或 Token 内容，不需要的话可以留空，删除或在这三行最前面加 # 以注释
 ARGO_AUTH=''
 ARGO_DOMAIN="$ARGO_DOMAIN"
 
-# ttyd / filebrowser argo 域名
-#SSH_DOMAIN="$SSH_AUTH"
-#FTP_DOMAIN="$FTP_AUTH"
 
 # 安装系统依赖
 check_dependencies() {
@@ -348,96 +343,8 @@ ABC
 }
 
 
-generate_ttyd() {
-  cat > ttyd.sh << EOF
-#!/usr/bin/env bash
-
-# ttyd 三个参数
-WEB_USERNAME=${WEB_USERNAME}
-WEB_PASSWORD=${WEB_PASSWORD}
-SSH_DOMAIN=${SSH_DOMAIN}
-
-# 检测是否已运行
-check_run() {
-  [[ \$(pgrep -lafx ttyd) ]] && echo "ttyd 正在运行中" && exit
-}
-
-# ssh argo 域名不设置，则不安装 ttyd 服务端
-check_variable() {
-  [ -z "\${SSH_DOMAIN}" ] && exit
-}
-
-# 下载最新版本 ttyd
-download_ttyd() {
-  if [ ! -e ttyd ]; then
-    URL=\$(wget -qO- "https://api.github.com/repos/tsl0922/ttyd/releases/latest" | grep -o "https.*x86_64")
-    URL=\${URL:-https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64}
-    wget -O ttyd \${URL}
-    chmod +x ttyd
-  fi
-}
-
-# 运行 ttyd 服务端
-run() {
-  [ -e ttyd ] && nohup ./ttyd -c \${WEB_USERNAME}:\${WEB_PASSWORD} -p 2222 bash >/dev/null 2>&1 &
-}
-
-check_run
-check_variable
-download_ttyd
-run
-EOF
-}
-
-generate_filebrowser () {
-  cat > filebrowser.sh << EOF
-#!/usr/bin/env bash
-
-# filebrowser 三个参数
-WEB_USERNAME=${WEB_USERNAME}
-WEB_PASSWORD=${WEB_PASSWORD}
-FTP_DOMAIN=${FTP_DOMAIN}
-
-# 检测是否已运行
-check_run() {
-  [[ \$(pgrep -lafx filebrowser) ]] && echo "filebrowser 正在运行中" && exit
-}
-
-# 若 ftp argo 域名不设置，则不安装 filebrowser
-check_variable() {
-  [ -z "\${FTP_DOMAIN}" ] && exit
-}
-
-# 下载最新版本 filebrowser
-download_filebrowser() {
-  if [ ! -e filebrowser ]; then
-    URL=\$(wget -qO- "https://api.github.com/repos/filebrowser/filebrowser/releases/latest" | grep -o "https.*linux-amd64.*gz")
-    URL=\${URL:-https://github.com/filebrowser/filebrowser/releases/download/v2.23.0/linux-amd64-filebrowser.tar.gz}
-    wget -O filebrowser.tar.gz \${URL}
-    tar xzvf filebrowser.tar.gz filebrowser
-    rm -f filebrowser.tar.gz
-    chmod +x filebrowser
-  fi
-}
-
-# 运行 filebrowser 服务端
-run() {
-  PASSWORD_HASH=\$(./filebrowser hash \$WEB_PASSWORD)
-  [ -e filebrowser ] && nohup ./filebrowser --port 3333 --username \${WEB_USERNAME} --password "\${PASSWORD_HASH}" >/dev/null 2>&1 &
-}
-
-check_run
-check_variable
-download_filebrowser
-run
-EOF
-}
 
 generate_config
 generate_argo
-#generate_ttyd
-#generate_filebrowser
 
 [ -e argo.sh ] && bash argo.sh
-#[ -e ttyd.sh ] && bash ttyd.sh
-#[ -e filebrowser.sh ] && bash filebrowser.sh
