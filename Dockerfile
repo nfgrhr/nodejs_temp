@@ -1,6 +1,6 @@
 FROM node:lts as runner
 
-WORKDIR /app
+WORKDIR /
 COPY package*.json ./
 RUN npm install
 COPY . .
