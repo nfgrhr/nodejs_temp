@@ -1,9 +1,17 @@
-FROM node:lts as runner
+#Sample Dockerfile for NodeJS Apps
 
-WORKDIR /
+FROM node:16
 
-RUN npm install
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY ["package.json", "package-lock.json*", "./"]
+
+RUN npm install --production
+
 COPY . .
 
-EXPOSE 3000
-CMD npm run start
+EXPOSE 8080
+
+CMD [ "node", "index.js" ]
