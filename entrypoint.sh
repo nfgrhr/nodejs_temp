@@ -290,7 +290,9 @@ div {
 </body>
 </html>
 EOF
-    cat list
+
+echo vmess://\$(echo \$VMESS | base64 -w0)
+    # cat list
   fi
 }
 
